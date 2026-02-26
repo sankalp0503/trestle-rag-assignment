@@ -1,0 +1,25 @@
+# Python caches and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment or secrets
+.env
+.env.*    # any env variants
+.venv/
+pytorch_env/      # your local virtual env
+
+# IDE/editor settings
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Data, logs, and large artifacts you don’t want in repo
+data/
+*.log
+test_rag_document.pdf     # test files you generated locally
+
+# Optional: Ignore other large or sensitive files
+# e.g., ignore any local-only folders or outputs
