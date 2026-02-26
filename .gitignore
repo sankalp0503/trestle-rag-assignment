@@ -21,5 +21,4 @@ data/
 *.log
 test_rag_document.pdf     # test files you generated locally
 
-# Optional: Ignore other large or sensitive files
-# e.g., ignore any local-only folders or outputs
+trestle-rag-assignment.git/
