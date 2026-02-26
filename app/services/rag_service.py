@@ -1,7 +1,8 @@
 import logging
 from functools import lru_cache
 from typing import Iterable, List, Tuple
-
+import re
+from typing import List
 from openai import OpenAI
 from openai import RateLimitError
 from app.core.config import get_settings
@@ -178,33 +179,53 @@ class RAGService:
             return f"⚠️ LLM call failed. Returning summarized context:\n\n{summary}"
 
 
-
-
-    def _summarize_chunks(self, chunks: List[RetrievedChunk], max_chunks: int = 3, max_lines: int = 5) -> str:
+    def _summarize_chunks(
+        self,
+        chunks: List[RetrievedChunk],
+        max_chunks: int = 3,
+        max_lines: int = 5
+    ) -> str:
         """
-        Summarize retrieved chunks for fallback answers:
-        - Deduplicates identical or very similar text
-        - Limits number of chunks included
-        - Limits number of lines per chunk
-        - Produces a readable concise summary
+        Improved fallback summarizer:
+        - Normalizes text before deduplication
+        - Removes near-duplicate overlapping chunks
+        - Removes repeated paragraphs inside a chunk
+        - Limits chunks and lines cleanly
         """
-        seen_hashes = set()
+
+        seen_signatures = set()
         formatted_chunks = []
 
         for chunk in chunks:
-            # Use a simple hash to detect duplicate or repeated text
-            text_hash = hash(chunk.text.strip())
-            if text_hash in seen_hashes:
-                continue
-            seen_hashes.add(text_hash)
+            # 1️⃣ Normalize text (remove extra spaces + lowercase)
+            normalized = re.sub(r"\s+", " ", chunk.text.strip().lower())
 
-            # Take only first max_lines lines from the chunk
-            lines = chunk.text.strip().splitlines()
-            snippet = "\n".join(lines[:max_lines])
-            formatted_chunks.append(f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ...")
+            # 2️⃣ Use prefix-based signature to remove overlapping duplicates
+            signature = normalized[:500]  # first 500 chars enough for similarity
+
+            if signature in seen_signatures:
+                continue
+
+            seen_signatures.add(signature)
+
+            # 3️⃣ Remove repeated paragraphs inside same chunk
+            paragraphs = []
+            seen_paragraphs = set()
+
+            for para in chunk.text.strip().split("\n"):
+                cleaned_para = para.strip()
+                if cleaned_para and cleaned_para not in seen_paragraphs:
+                    paragraphs.append(cleaned_para)
+                    seen_paragraphs.add(cleaned_para)
+
+            snippet = "\n".join(paragraphs[:max_lines])
+
+            formatted_chunks.append(
+                f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ..."
+            )
 
             if len(formatted_chunks) >= max_chunks:
-                break  # Only include top max_chunks
+                break
 
         if not formatted_chunks:
             return "No relevant text could be summarized from the documents."
