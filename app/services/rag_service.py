@@ -179,51 +179,46 @@ class RAGService:
             return f"⚠️ LLM call failed. Returning summarized context:\n\n{summary}"
 
 
-    def _summarize_chunks(
-        self,
-        chunks: List[RetrievedChunk],
-        max_chunks: int = 3,
-        max_lines: int = 5
-    ) -> str:
+    def _summarize_chunks(self, chunks: List["RetrievedChunk"], max_chunks: int = 3, max_lines: int = 5) -> str:
         """
-        Improved fallback summarizer:
-        - Normalizes text before deduplication
-        - Removes near-duplicate overlapping chunks
-        - Removes repeated paragraphs inside a chunk
-        - Limits chunks and lines cleanly
+        Summarizes retrieved chunks:
+        - Deduplicates near-duplicate chunks
+        - Removes repeated lines globally
+        - Limits lines per chunk
+        - Stops after max_chunks
         """
 
-        seen_signatures = set()
+        seen_signatures = set()  # For near-duplicate chunks
+        seen_lines = set()       # For exact line deduplication across chunks
         formatted_chunks = []
 
         for chunk in chunks:
-            # 1️⃣ Normalize text (remove extra spaces + lowercase)
-            normalized = re.sub(r"\s+", " ", chunk.text.strip().lower())
-
-            # 2️⃣ Use prefix-based signature to remove overlapping duplicates
-            signature = normalized[:500]  # first 500 chars enough for similarity
-
+            # 1️⃣ Normalize chunk text for signature
+            normalized_chunk = re.sub(r"\s+", " ", chunk.text.strip().lower())
+            signature = normalized_chunk[:500]  # first 500 chars for similarity check
             if signature in seen_signatures:
                 continue
-
             seen_signatures.add(signature)
 
-            # 3️⃣ Remove repeated paragraphs inside same chunk
-            paragraphs = []
-            seen_paragraphs = set()
+            # 2️⃣ Split chunk into lines, normalize, and deduplicate
+            lines = []
+            for line in chunk.text.strip().split("\n"):
+                cleaned_line = line.strip()
+                normalized_line = re.sub(r"\s+", " ", cleaned_line.lower())
+                if cleaned_line and normalized_line not in seen_lines:
+                    lines.append(cleaned_line)
+                    seen_lines.add(normalized_line)
 
-            for para in chunk.text.strip().split("\n"):
-                cleaned_para = para.strip()
-                if cleaned_para and cleaned_para not in seen_paragraphs:
-                    paragraphs.append(cleaned_para)
-                    seen_paragraphs.add(cleaned_para)
+            if not lines:
+                continue  # skip chunk if no new lines
 
-            snippet = "\n".join(paragraphs[:max_lines])
+            # 3️⃣ Limit lines per chunk
+            snippet = "\n".join(lines[:max_lines])
 
-            formatted_chunks.append(
-                f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ..."
-            )
+            # 4️⃣ Format nicely
+            formatted_chunks.append(f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ...")
 
+            # 5️⃣ Stop if max_chunks reached
             if len(formatted_chunks) >= max_chunks:
                 break
 
