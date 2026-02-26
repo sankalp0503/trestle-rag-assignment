@@ -31,10 +31,6 @@ async def ingest_documents(
     effective_chunk_size = chunk_size or settings.chunk_size
     effective_chunk_overlap = chunk_overlap or settings.chunk_overlap
 
-    # Add print statements to log each step of the ingestion process
-    print("Starting document ingestion...")
-    print(f"Effective chunk size: {effective_chunk_size}, Effective chunk overlap: {effective_chunk_overlap}")
-
     if effective_chunk_overlap >= effective_chunk_size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -43,7 +39,6 @@ async def ingest_documents(
 
     items: list[tuple[str, bytes, str | None]] = []
     for file in files:
-        print(f"Processing file: {file.filename}")
         try:
             content = await file.read()
             items.append((file.filename, content, file.content_type))
@@ -61,7 +56,6 @@ async def ingest_documents(
         chunk_overlap=effective_chunk_overlap,
     )
 
-    print(f"Document names: {document_names}, Chunks indexed: {chunks_indexed}")
 
     if not document_names:
         raise HTTPException(

@@ -127,12 +127,7 @@ class RAGService:
         context = "\n\n".join(context_parts)
          # Call LLM or fallback
         answer = self._call_llm(question=question, retrieved_chunks=retrieved_chunks)
-
         confidence = float(sum(similarity_scores) / len(similarity_scores))
-
-        # Add logging to verify query results
-        print(f"Retrieved {len(retrieved_chunks)} chunks. First chunk: {retrieved_chunks[0] if retrieved_chunks else 'None'}")
-        print(f"Answer: {answer}, Confidence: {confidence}")
 
         return answer, confidence, retrieved_chunks
     
@@ -185,27 +180,36 @@ class RAGService:
 
 
 
-    def _summarize_chunks(self, chunks: List[RetrievedChunk], max_lines: int = 5) -> str:
-            """
-            Summarize retrieved chunks for fallback answers:
-            - Deduplicates identical text
-            - Limits number of lines per chunk
-            - Produces a readable fallback summary
-            """
-            seen_texts = set()
-            formatted_chunks = []
+    def _summarize_chunks(self, chunks: List[RetrievedChunk], max_chunks: int = 3, max_lines: int = 5) -> str:
+        """
+        Summarize retrieved chunks for fallback answers:
+        - Deduplicates identical or very similar text
+        - Limits number of chunks included
+        - Limits number of lines per chunk
+        - Produces a readable concise summary
+        """
+        seen_hashes = set()
+        formatted_chunks = []
 
-            for idx, chunk in enumerate(chunks):
-                if chunk.text in seen_texts:
-                    continue  # remove duplicates
-                seen_texts.add(chunk.text)
+        for chunk in chunks:
+            # Use a simple hash to detect duplicate or repeated text
+            text_hash = hash(chunk.text.strip())
+            if text_hash in seen_hashes:
+                continue
+            seen_hashes.add(text_hash)
 
-                lines = chunk.text.strip().splitlines()
-                snippet = "\n".join(lines[:max_lines])
-                formatted_chunks.append(f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ...")
+            # Take only first max_lines lines from the chunk
+            lines = chunk.text.strip().splitlines()
+            snippet = "\n".join(lines[:max_lines])
+            formatted_chunks.append(f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ...")
 
-            # Merge snippets into a single summary
-            return "\n\n".join(formatted_chunks)
+            if len(formatted_chunks) >= max_chunks:
+                break  # Only include top max_chunks
+
+        if not formatted_chunks:
+            return "No relevant text could be summarized from the documents."
+
+        return "\n\n".join(formatted_chunks)
 
 
 

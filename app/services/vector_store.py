@@ -111,9 +111,6 @@ class FaissVectorStore:
             self.metadata.extend(metadatas)
             self._save()
 
-            # Add logging to verify vector storage
-            print(f"Added {num_vectors} vectors to the vector store.")
-
         return num_vectors
     
 

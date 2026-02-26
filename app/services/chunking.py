@@ -18,7 +18,5 @@ def chunk_text(text: str, chunk_size: int, chunk_overlap: int) -> List[str]:
         separators=["\n\n", "\n", " ", ""]
     )
     chunks = splitter.split_text(text)
-    # Add logging to verify chunking
-    print(f"Generated {len(chunks)} chunks. First chunk: {chunks[0] if chunks else 'None'}")
     return [c.strip() for c in chunks if c.strip()]
 

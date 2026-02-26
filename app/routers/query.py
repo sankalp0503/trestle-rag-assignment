@@ -21,10 +21,6 @@ router = APIRouter()
     ),
 )
 def query_documents(payload: QueryRequest) -> QueryResponse:
-    # Add print statements to log each step of the query process
-    print("Received query request...")
-    print(f"Question: {payload.question}, Top K: {payload.top_k}")
-    
     try:
         rag_service = get_rag_service()
         answer, confidence, retrieved_chunks = rag_service.answer_question(
@@ -42,10 +38,6 @@ def query_documents(payload: QueryRequest) -> QueryResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to answer query.",
         ) from exc
-
-    print(f"Answer: {answer}, Confidence: {confidence}")
-    print(f"--------------------------------------------------")
-    print(f"Retrieved chunks: {retrieved_chunks}")
 
     return {
         "answer": answer,

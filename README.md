@@ -59,18 +59,18 @@ README.md
 ```
 
 ### Project Architecture Overview
--main
-  -Defines the create_app() factory.
-  -Configures logging.
-  -Creates the FastAPI instance.
+- main
+  - Defines the create_app() factory.
+  - Configures logging.
+  - Creates the FastAPI instance.
 
--api
-  -Centralizes router registration.
-  -Attaches all route modules to the application instance.
--core –> configuration and logging
--models –> Pydantic schemas for request/response validation and serialization
--routers –> HTTP endpoints
--services –> business logic (RAG pipeline components)
+- api
+  - Centralizes router registration.
+  - Attaches all route modules to the application instance.
+- core –> configuration and logging
+- models –> Pydantic schemas for request/response validation and serialization
+- routers –> HTTP endpoints
+- services –> business logic (RAG pipeline components)
 
 ---
 
@@ -236,16 +236,16 @@ Possible error responses:
 
 
 ###Notes:
--If OpenAI API key is not configured or the API quota is exceeded, the service:
-    -Returns a context-only answer based on retrieved chunks.
-    -Deduplicates repeated chunks.
-    -Shows document name and chunk ID for clarity.
-    -Limits the number of lines per chunk for readability.
-    -Ensures the API remains functional even offline.
+- If OpenAI API key is not configured or the API quota is exceeded, the service:
+    - Returns a context-only answer based on retrieved chunks.
+    - Deduplicates repeated chunks.
+    - Shows document name and chunk ID for clarity.
+    - Limits the number of lines per chunk for readability.
+    - Ensures the API remains functional even offline.
 
--Possible error responses:
-    -400: if no documents have been ingested yet.
-    -500: on unexpected server error.
+- Possible error responses:
+    - 400: if no documents have been ingested yet.
+    - 500: on unexpected server error.
 
 ---
 
@@ -274,9 +274,40 @@ Possible error responses:
 
 ---
 
-### 8. How to Extend
+### 8. ngrok Deployment (Optional)
+
+You can expose the API to the internet for testing using ngrok.
+**Important behaviors (Free plan)**
+
+  - Every restart of ngrok generates a new public URL.
+  - Any previously shared URL will no longer work (404 for users).
+  - The first-time user visiting the URL sees a confirmation page:
+
+   `You are about to visit <subdomain>.ngrok-free.dev`
+   `[Visit Site]`
+
+  - Clicking Visit Site opens the FastAPI Swagger UI (/docs).
+
+**Usage Steps**
+  - Install ngrok:
+    `brew install ngrok`
+  - Start FastAPI:
+    `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+  - Start ngrok:
+    `ngrok http 8000`
+  - Share the new ngrok URL:
+    `https://<random-subdomain>.ngrok-free.dev/docs`
+
+  Free plan: URL changes on each restart.
+  Paid plan: Supports reserved subdomains for fixed URLs.
+
+---
+
+### 9. How to Extend
 
 - Swap in a different **vector store** (e.g., Pinecone, Weaviate, Chroma) by implementing a compatible service instead of `FaissVectorStore`.
 - Use another **LLM provider** (Gemini, Claude, local model) by replacing the `_call_llm` method in `rag_service.py`.
 - Improve **chunking** to be token-based (e.g., with `tiktoken`) instead of simple characters.
 - Add authentication, rate limiting, or multi-tenant support as needed.
+- Improve the deployment process, e.g., automated Docker builds, CI/CD pipelines, or persistent hosting instead of relying on ngrok for external access.
+

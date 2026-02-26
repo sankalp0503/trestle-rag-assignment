@@ -42,7 +42,6 @@ class TextExtractor:
             logger.warning("Unsupported file type for %s (content_type=%s)", file_name, content_type)
             raise ValueError(f"Unsupported file type: {file_name}")
 
-        print(f"Extracted text from {file_name}: {text[:200]}...")
         return text
     
 

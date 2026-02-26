@@ -64,15 +64,12 @@ class EmbeddingService:
 
             norms = np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-8
             # Add logging to verify embeddings
-            print(f"Generated embeddings for {len(texts)} texts. First embedding: {vectors[0] if len(vectors) > 0 else 'None'}")
             return vectors / norms
 
         except RateLimitError as e:
-            print("OpenAI quota exceeded. Falling back to local embeddings.")
             return self._local_embed(texts)
 
         except Exception as e:
-            print(f"Embedding API failed: {e}")
             return self._local_embed(texts)
 
     def embed_query(self, text: str) -> np.ndarray:
