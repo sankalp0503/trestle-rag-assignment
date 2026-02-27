@@ -1,8 +1,6 @@
 import logging
 from typing import List
-
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
-
 from app.core.config import get_settings
 from app.models.schemas import IngestResponse
 from app.services.rag_service import get_rag_service
@@ -42,7 +40,7 @@ async def ingest_documents(
         try:
             content = await file.read()
             items.append((file.filename, content, file.content_type))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  
             logger.exception("Failed to read uploaded file %s: %s", file.filename, exc)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -55,7 +53,6 @@ async def ingest_documents(
         chunk_size=effective_chunk_size,
         chunk_overlap=effective_chunk_overlap,
     )
-
 
     if not document_names:
         raise HTTPException(

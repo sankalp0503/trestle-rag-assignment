@@ -1,5 +1,4 @@
 from typing import List
-
 import numpy as np
 from openai import OpenAI, RateLimitError
 from app.core.config import get_settings
@@ -63,7 +62,6 @@ class EmbeddingService:
             )
 
             norms = np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-8
-            # Add logging to verify embeddings
             return vectors / norms
 
         except RateLimitError as e:
@@ -71,6 +69,7 @@ class EmbeddingService:
 
         except Exception as e:
             return self._local_embed(texts)
+        
 
     def embed_query(self, text: str) -> np.ndarray:
         return self.embed_texts([text])

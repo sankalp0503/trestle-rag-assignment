@@ -4,7 +4,6 @@ import mimetypes
 import tempfile
 from pathlib import Path
 from typing import Optional
-
 from PIL import Image
 import pytesseract
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
@@ -64,7 +63,6 @@ class TextExtractor:
         Use LangChain's TextLoader on a temporary file for .txt / .md and
         other textual content.
         """
-        # Choose a reasonable suffix so downstream tooling can infer type.
         if suffix not in {".txt", ".md"}:
             suffix = ".txt"
 

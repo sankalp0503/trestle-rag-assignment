@@ -34,6 +34,8 @@ class RAGService:
         self.text_extractor = TextExtractor()
         self.vector_store = FaissVectorStore()
 
+
+
     # -------- Ingestion --------
 
     def ingest_documents(
@@ -59,7 +61,7 @@ class RAGService:
                     file_bytes=file_bytes,
                     content_type=content_type,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.exception("Failed to extract text from %s: %s", file_name, exc)
                 continue
 
@@ -90,13 +92,13 @@ class RAGService:
 
         return document_names, added
     
+    
 
     # -------- Question Answering --------
 
     def answer_question(self, question: str, top_k: int | None = None) -> tuple[str, float, List[RetrievedChunk]]:
         """
         Answer a question using retrieved context and an LLM.
-
         :returns: (answer, confidence, retrieved_chunks)
         """
         if self.vector_store.is_empty:
@@ -148,7 +150,7 @@ class RAGService:
                 f"{summary}"
             )
 
-        # Prepare full context
+        
         context = "\n\n".join([f"[{c.document_name} - chunk {c.chunk_id}]\n{c.text}" for c in retrieved_chunks])
         system_prompt = (
             "You are a helpful assistant that answers questions strictly based on the provided context. "
@@ -193,14 +195,13 @@ class RAGService:
         formatted_chunks = []
 
         for chunk in chunks:
-            # 1️⃣ Normalize chunk text for signature
+            #  Normalize chunk text for signature
             normalized_chunk = re.sub(r"\s+", " ", chunk.text.strip().lower())
             signature = normalized_chunk[:500]  # first 500 chars for similarity check
             if signature in seen_signatures:
                 continue
             seen_signatures.add(signature)
 
-            # 2️⃣ Split chunk into lines, normalize, and deduplicate
             lines = []
             for line in chunk.text.strip().split("\n"):
                 cleaned_line = line.strip()
@@ -210,15 +211,11 @@ class RAGService:
                     seen_lines.add(normalized_line)
 
             if not lines:
-                continue  # skip chunk if no new lines
+                continue
 
-            # 3️⃣ Limit lines per chunk
             snippet = "\n".join(lines[:max_lines])
-
-            # 4️⃣ Format nicely
             formatted_chunks.append(f"[Chunk {chunk.chunk_id}] {chunk.document_name}\n{snippet} ...")
 
-            # 5️⃣ Stop if max_chunks reached
             if len(formatted_chunks) >= max_chunks:
                 break
 

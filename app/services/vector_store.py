@@ -4,12 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, List, Tuple
-
 import faiss
 import numpy as np
-
 from app.core.config import get_settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +66,7 @@ class FaissVectorStore:
                     self.index.ntotal,
                     index_path,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc: 
                 logger.exception("Failed to load vector store: %s", exc)
                 self.index = None
                 self.metadata = []
@@ -92,7 +89,6 @@ class FaissVectorStore:
     def add(self, embeddings: np.ndarray, metadatas: List[StoredMetadata]) -> int:
         """
         Add embedding vectors and associated metadata to the store.
-
         Returns the number of vectors added.
         """
         if embeddings.ndim != 2:
@@ -117,7 +113,6 @@ class FaissVectorStore:
     def search(self, query_embedding: np.ndarray, top_k: int) -> List[Tuple[StoredMetadata, float]]:
         """
         Search the index with a query embedding.
-
         Returns a list of (metadata, similarity_score).
         """
         if self.index is None or self.index.ntotal == 0:
