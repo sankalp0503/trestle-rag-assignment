@@ -1,7 +1,7 @@
 This is a sample document about refund policy and returns.
 
 Customers can request a refund within 30 days of purchase, provided they have a valid receipt.
-Refunds are processed within 5 business days.
+Refunds are processed within 5 business days testing.
 
 
 
